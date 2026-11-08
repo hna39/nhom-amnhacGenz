@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENIGMA’S CULT — We Don't Revive Fashion, We Resurrect Icons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #070608;
+      --obsidian: #0f0d12;
+      --bone: #f2ece1;
+      --ash: rgba(242, 236, 225, 0.48);
+      --faint: rgba(242, 236, 225, 0.12);
+      --gold: #d4a857;
+      --crimson: #c8372d;
+      --chrome: #e5e1dc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html.lenis,
+    html.lenis body {
+      height: auto;
+    }
+
+    .lenis.lenis-smooth {
+      scroll-behavior: auto !important;
+    }
+
+    body {
+      background-color: var(--void);
+      color: var(--bone);
+      font-family: "Syne", system-ui, sans-serif;
+      overflow-x: hidden;
+      cursor: none; /* Ẩn chuột mặc định để dùng Custom Cult Cursor */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a, button {
+      color: inherit;
+      text-decoration: none;
+      cursor: none;
+    }
+
+    /* =========================================================================
+     * 1. CUSTOM CURSOR & MOUSE TRAIL (Hiệu ứng lướt chuột đặc trưng EnigmasCult)
+     * ========================================================================= */
+    .cursor-dot {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 8px;
+      height: 8px;
+      background: var(--bone);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+    }
+
+    .cursor-ring {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(242, 236, 225, 0.55);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  background 0.35s ease,
+                  border-color 0.35s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    .cursor-ring span {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--void);
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+    }
+
+    body.cursor-hover .cursor-ring {
+      width: 96px;
+      height: 96px;
+      background: var(--bone);
+      border-color: var(--bone);
+      mix-blend-mode: normal;
+    }
+
+    body.cursor-hover .cursor-ring span {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Hào quang Chiaroscuro chạy theo chuột soi sáng nền mây Phục Hưng */
+    .mouse-spotlight {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(
+        520px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(212, 168, 87, 0.13),
+        rgba(200, 55, 45, 0.05) 45%,
+        transparent 80%
+      );
+    }
+
+    /* Lớp nhiễu hạt Film Grain cổ điển */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 900;
+      opacity: 0.065;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+    }
+
+    /* =========================================================================
+     * 2. CANVAS THREE.JS CỐ ĐỊNH (3D Hero Ring + Parting Renaissance Clouds)
+     * ========================================================================= */
+    #webgl-stage {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* =========================================================================
+     * 3. HEADER NAVIGATION (Magnetic Cult Bar)
+     * ========================================================================= */
+    header.cult-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 26px 4vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      mix-blend-mode: difference;
+    }
+
+    .nav-logo {
+      font-family: "Cinzel", serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      position: relative;
+      padding: 6px 0;
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 1px;
+      background: var(--bone);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .nav-cta {
+      padding: 10px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(242, 236, 225, 0.4);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .nav-cta:hover {
+      background: var(--bone);
+      color: var(--void);
+    }
+
+    /* =========================================================================
+     * 4. CÁC PHÂN ĐOẠN NỘI DUNG (SCROLLYTELLING SECTIONS)
+     * ========================================================================= */
+    main {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* --- SECTION 1: HERO --- */
+    .hero-sec {
+      position: relative;
+      height: 100vh;
+      min-height: 700px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 4vw;
+      overflow: hidden;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.55;
+    }
+
+    .hero-title {
+      font-family: "Cinzel", serif;
+      font-size: clamp(2.8rem, 8.2vw, 8.8rem);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      max-width: 1400px;
+      position: relative;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .hero-title em {
+      font-family: "Cormorant Garamond", serif;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .hero-sub {
+      margin-top: 32px;
+      max-width: 480px;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--ash);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.68rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--ash);
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 48px;
+      background: rgba(242, 236, 225, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scroll-line::after {
+      content: "";
+      position: absolute;
+      top: -100%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--gold);
+      animation: scrollDrop 2s cubic-bezier(0.77, 0, 0.18, 1) infinite;
+    }
+
+    @keyframes scrollDrop {
+      0% { top: -100%; }
+      50% { top: 0%; }
+      100% { top: 100%; }
+    }
+
+    /* --- SECTION 2: THE MINI MANIFESTO (Scrub Text Reveal + Floating Relics) --- */
+    .manifesto-sec {
+      position: relative;
+      min-height: 120vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15vh 8vw;
+    }
+
+    .manifesto-wrap {
+      max-width: 1080px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .sec-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--crimson);
+      margin-bottom: 28px;
+      display: block;
+    }
+
+    .manifesto-text {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(2.1rem, 4.6vw, 4.4rem);
+      line-height: 1.18;
+      font-weight: 600;
+      color: var(--bone);
+    }
+
+    .manifesto-text .m-word {
+      display: inline-block;
+      opacity: 0.16;
+      transition: color 0.2s ease;
+      will-change: opacity, transform;
+    }
+
+    .manifesto-text .m-word.gold-word {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    /* --- SECTION 3: HORIZONTAL PINNED SHOWCASE (Live Auctions · Mystery Boxes · Reborn Customs) --- */
+    .rituals-pin-sec {
+      position: relative;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .rituals-track {
+      display: flex;
+      gap: 4.5vw;
+      padding: 0 8vw;
+      width: max-content;
+      will-change: transform;
+    }
+
+    .ritual-intro-panel {
+      width: 34vw;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .ritual-intro-panel h2 {
+      font-family: "Cinzel", serif;
+      font-size: clamp(2.2rem, 4.2vw, 4.2rem);
+      line-height: 1.02;
+      margin-bottom: 20px;
+    }
+
+    .ritual-intro-panel p {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--ash);
+    }
+
+    /* Card 3D Tilt khi rê chuột (Magnetic 3D Glare Card) */
+    .cult-card {
+      position: relative;
+      width: 38vw;
+      min-width: 360px;
+      max-width: 540px;
+      height: 68vh;
+      min-height: 480px;
+      border-radius: 20px;
+      background: rgba(18, 15, 22, 0.78);
+      border: 1px solid rgba(242, 236, 225, 0.14);
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
+    }
+
+    .cult-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        420px circle at var(--cx, 50%) var(--cy, 50%),
+        rgba(212, 168, 87, 0.22),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .cult-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-bg-art {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.42;
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+    }
+
+    .cult-card:hover .card-bg-art {
+      transform: scale(1.08);
+      opacity: 0.62;
+    }
+
+    .card-top {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ritual-num {
+      font-family: "Cinzel", serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      background: rgba(200, 55, 45, 0.22);
+      border: 1px solid rgba(200, 55, 45, 0.55);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #ff7b72;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff4d42;
+      box-shadow: 0 0 10px #ff4d42;
+      animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
+    .card-bottom {
+      position: relative;
+      z-index: 3;
+      transform: translateZ(30px);
+    }
+
+    .card-bottom h3 {
+      font-family: "Cinzel", serif;
+      font-size: clamp(1.65rem, 2.5vw, 2.5rem);
+      margin-bottom: 12px;
+      line-height: 1.08;
+    }
+
+    .card-bottom p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--ash);
+      margin-bottom: 22px;
+    }
+
+    .card-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid var(--faint);
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* --- SECTION 4: KINETIC VELOCITY MARQUEE & MYSTERY VAULT --- */
+    .marquee-sec {
+      padding: 7vh 0;
+      border-top: 1px solid var(--faint);
+      border-bottom: 1px solid var(--faint);
+      overflow: hidden;
+      background: rgba(12, 10, 15, 0.75);
+    }
+
+    .marquee-inner {
+      display: flex;
+      gap: 4vw;
+      width: max-content;
+      font-family: "Cinzel", serif;
+      font-size: clamp(2.4rem, 5.5vw, 5.8rem);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      animation: marqueeMove 26s linear infinite;
+    }
+
+    .marquee-inner span.hollow {
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(242, 236, 225, 0.42);
+    }
+
+    @keyframes marqueeMove {
+      to { transform: translateX(-50%); }
+    }
+
+    /* --- SECTION 5: CULT FOOTER --- */
+    footer.cult-footer {
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12vh 6vw 5vh;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .footer-cta-box {
+      margin: auto;
+      max-width: 780px;
+    }
+
+    .footer-cta-box h2 {
+      font-family: "Cinzel", serif;
+      font-size: clamp(2.5rem, 6.2vw, 6.4rem);
+      line-height: 0.96;
+      margin: 18px 0 32px;
+    }
+
+    .magnetic-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 42px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #d4a857, #9c6e24);
+      color: var(--void);
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      box-shadow: 0 18px 45px rgba(212, 168, 87, 0.28);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 28px;
+      border-top: 1px solid var(--faint);
+      font-size: 0.74rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ash);
+    }
+
+    @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor-dot, .cursor-ring { display: none; }
+      .nav-links { display: none; }
+      .cult-card { width: 82vw; min-width: 290px; }
+      .ritual-intro-panel { width: 82vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Con trỏ chuột đôi biến hình (Custom Magnetic Cult Cursor) -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span id="cursorText">ENTER</span></div>
+  <div class="mouse-spotlight" id="spotlight"></div>
+  <div class="film-grain"></div>
+
+  <!-- Sân khấu 3D Three.js (Nhẫn Cổ vật 3D + Mây Phục Hưng tách lớp theo chuột & cuộn) -->
+  <canvas id="webgl-stage"></canvas>
+
+  <!-- Thanh điều hướng -->
+  <header class="cult-nav">
+    <a href="#top" class="nav-logo" data-cursor="HOME">ENIGMA</a>
+    <nav class="nav-links">
+      <a href="#manifesto" data-cursor="READ">Manifesto</a>
+      <a href="#rituals" data-cursor="DROPS">Live Auctions</a>
+      <a href="#rituals" data-cursor="UNLOCK">Mystery Boxes</a>
+      <a href="#rituals" data-cursor="CUSTOM">Reborn</a>
+    </nav>
+    <a href="#join" class="nav-cta magnetic" data-cursor="JOIN">Enter The Cult</a>
+  </header>
+
+  <main id="top">
+    <!-- 1. HERO SECTION -->
+    <section class="hero-sec" id="hero">
+      <div class="hero-eyebrow">The Cult of Authenticated Streetwear</div>
+      <h1 class="hero-title" id="heroTitle">
+        We Don’t Revive<br><em>Fashion.</em> We<br>Resurrect Icons.
+      </h1>
+      <p class="hero-sub">
+        A members-first resale house where Renaissance theater meets live sneaker auctions, style-coded mystery boxes, and one-of-one Reborn customs.
+      </p>
+      <div class="scroll-indicator">
+        <span>Scroll to Initiate</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- 2. THE MINI MANIFESTO (Scrollytelling Word-by-Word Scrub) -->
+    <section class="manifesto-sec" id="manifesto">
+      <div class="manifesto-wrap">
+        <span class="sec-tag">01 // The Mini Manifesto</span>
+        <p class="manifesto-text" id="manifestoText">
+          Enigma is a <span class="gold-word">fashion cult</span> that guards the flame of true hype. Plugged in with resellers worldwide who don’t believe in <span class="gold-word">gatekeeping,</span> and collectors whose closets tell stories worth a <span class="gold-word">fortune.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- 3. HORIZONTAL PINNED SHOWCASE (3 Rituals) -->
+    <section class="rituals-pin-sec" id="rituals">
+      <div class="rituals-track" id="ritualsTrack">
+        <div class="ritual-intro-panel">
+          <span class="sec-tag">02 // Sacred Drops</span>
+          <h2>Three Pillars Of The Vault</h2>
+          <p>
+            Move your cursor across each artifact to inspect in 3D, or keep scrolling to glide through our live bidding chambers and bespoke ateliers.
+          </p>
+        </div>
+
+        <!-- Card 1: Live Sneaker Auctions -->
+        <article class="cult-card tilt-card" data-cursor="BID LIVE">
+          <svg class="card-bg-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="gCard1" cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0" stop-color="#c8372d" stop-opacity="0.55"/>
+                <stop offset="1" stop-color="#0f0d12" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="500" fill="url(#gCard1)"/>
+            <circle cx="200" cy="210" r="115" fill="none" stroke="rgba(212,168,87,0.35)" stroke-width="1.2" stroke-dasharray="6 6"/>
+            <circle cx="200" cy="210" r="82" fill="none" stroke="rgba(242,236,225,0.2)" stroke-width="1"/>
+            <path d="M110 230 Q180 165 295 215 L275 255 L115 255 Z" fill="none" stroke="#d4a857" stroke-width="2"/>
+          </svg>
+          <div class="card-top">
+            <span class="ritual-num">RITUAL // I</span>
+            <span class="live-pill"><span class="live-dot"></span> Live Auction</span>
+          </div>
+          <div class="card-bottom">
+            <h3>Live Sneaker Auctions</h3>
+            <p>Real-time bidding wars for deadstock grails, sample pairs, and archival collaborations verified by our master authenticators.</p>
+            <div class="card-meta-row">
+              <span>Next Drop: 00:42:18</span>
+              <span>482 Watching →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 2: Mystery Boxes -->
+        <article class="cult-card tilt-card" data-cursor="UNLOCK">
+          <svg class="card-bg-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="gCard2" cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0" stop-color="#d4a857" stop-opacity="0.48"/>
+                <stop offset="1" stop-color="#0f0d12" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="500" fill="url(#gCard2)"/>
+            <polygon points="200,110 290,160 290,260 200,310 110,260 110,160" fill="none" stroke="#d4a857" stroke-width="1.8"/>
+            <line x1="200" y1="210" x2="200" y2="310" stroke="rgba(212,168,87,0.5)" stroke-width="1.4"/>
+            <line x1="200" y1="210" x2="290" y2="160" stroke="rgba(212,168,87,0.5)" stroke-width="1.4"/>
+            <line x1="200" y1="210" x2="110" y2="160" stroke="rgba(212,168,87,0.5)" stroke-width="1.4"/>
+          </svg>
+          <div class="card-top">
+            <span class="ritual-num">RITUAL // II</span>
+            <span class="live-pill" style="border-color:rgba(212,168,87,0.5);background:rgba(212,168,87,0.15);color:#f3d285;">Style-Coded</span>
+          </div>
+          <div class="card-bottom">
+            <h3>Curated Mystery Boxes</h3>
+            <p>Algorithm-assisted, stylist-sealed chests tailored to your silhouette and aesthetic code. Zero filler, only certified heat.</p>
+            <div class="card-meta-row">
+              <span>Edition: Obsidian Tier</span>
+              <span>Take Style Quiz →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 3: Reborn Customs -->
+        <article class="cult-card tilt-card" data-cursor="INSPECT">
+          <svg class="card-bg-art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="gCard3" cx="0.5" cy="0.4" r="0.6">
+                <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.42"/>
+                <stop offset="1" stop-color="#0f0d12" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="500" fill="url(#gCard3)"/>
+            <circle cx="200" cy="210" r="95" fill="none" stroke="#e5e1dc" stroke-width="1.5"/>
+            <path d="M140 210 C170 140, 230 280, 260 210" fill="none" stroke="#d4a857" stroke-width="2"/>
+          </svg>
+          <div class="card-top">
+            <span class="ritual-num">RITUAL // III</span>
+            <span class="live-pill" style="border-color:rgba(229,225,220,0.4);background:rgba(229,225,220,0.12);color:#fff;">1-of-1 Atelier</span>
+          </div>
+          <div class="card-bottom">
+            <h3>Reborn Customs</h3>
+            <p>Distressed, hand-dyed, and reconstructed archival garments given a second life by underground artisans.</p>
+            <div class="card-meta-row">
+              <span> Craftsmanship: Hand-Stitched</span>
+              <span>Explore Archive →</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 4. VELOCITY MARQUEE -->
+    <section class="marquee-sec">
+      <div class="marquee-inner" id="marqueeInner">
+        <span>A Cult With A Checkout</span>
+        <span class="hollow">✦ Authenticated Grails</span>
+        <span>Renaissance Streetwear</span>
+        <span class="hollow">✦ No Gatekeeping</span>
+        <span>A Cult With A Checkout</span>
+        <span class="hollow">✦ Authenticated Grails</span>
+        <span>Renaissance Streetwear</span>
+        <span class="hollow">✦ No Gatekeeping</span>
+      </div>
+    </section>
+
+    <!-- 5. FOOTER -->
+    <footer class="cult-footer" id="join">
+      <div class="footer-cta-box">
+        <span class="sec-tag">03 // Initiation</span>
+        <h2>Claim Your Key<br>To The Vault</h2>
+        <a href="#top" class="magnetic-btn magnetic" data-cursor="UNLOCK">
+          <span>Request Cult Access</span>
+          <span>↗</span>
+        </a>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 ENIGMA’S CULT</span>
+        <span>ATHENS • TOKYO • NEW YORK</span>
+        <span>SOUND & MOTION BY RULER STYLE</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Libraries: Three.js + GSAP + ScrollTrigger + Lenis -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    (function () {
+      gsap.registerPlugin(ScrollTrigger);
+
+      /* =========================================================================
+       * 1. LENIS SMOOTH SCROLL + SCROLL VELOCITY SKEW
+       * ========================================================================= */
+      const lenis = new Lenis({
+        duration: 1.3,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true
+      });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((t) => lenis.raf(t * 1000));
+      gsap.ticker.lagSmoothing(0);
+
+      /* =========================================================================
+       * 2. CUSTOM MAGNETIC CURSOR & SPOTLIGHT TRACKING
+       * ========================================================================= */
+      const cursorDot = document.getElementById('cursorDot');
+      const cursorRing = document.getElementById('cursorRing');
+      const cursorText = document.getElementById('cursorText');
+      const spotlight = document.getElementById('spotlight');
+
+      const dotX = gsap.quickTo(cursorDot, 'x', { duration: 0.08, ease: 'power3' });
+      const dotY = gsap.quickTo(cursorDot, 'y', { duration: 0.08, ease: 'power3' });
+      const ringX = gsap.quickTo(cursorRing, 'x', { duration: 0.32, ease: 'power3' });
+      const ringY = gsap.quickTo(cursorRing, 'y', { duration: 0.32, ease: 'power3' });
+
+      const mouseNorm = { x: 0, y: 0, tx: 0, ty: 0 };
+
+      window.addEventListener('mousemove', (e) => {
+        dotX(e.clientX);
+        dotY(e.clientY);
+        ringX(e.clientX);
+        ringY(e.clientY);
+
+        spotlight.style.setProperty('--mx', e.clientX + 'px');
+        spotlight.style.setProperty('--my', e.clientY + 'px');
+
+        mouseNorm.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseNorm.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // Các phần tử có data-cursor sẽ làm vòng tròn chuột nở to và hiện chữ
+      document.querySelectorAll('[data-cursor]').forEach((el) => {
+        el.addEventListener('mouseenter', () => {
+          cursorText.textContent = el.getAttribute('data-cursor');
+          document.body.classList.add('cursor-hover');
+        });
+        el.addEventListener('mouseleave', () => {
+          document.body.classList.remove('cursor-hover');
+        });
+      });
+
+      // Hiệu ứng Nút Từ Tính (Magnetic Pull Buttons)
+      document.querySelectorAll('.magnetic').forEach((btn) => {
+        btn.addEventListener('mousemove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const dx = e.clientX - (rect.left + rect.width * 0.5);
+          const dy = e.clientY - (rect.top + rect.height * 0.5);
+          gsap.to(btn, { x: dx * 0.32, y: dy * 0.32, duration: 0.35, ease: 'power2.out' });
+        });
+        btn.addEventListener('mouseleave', () => {
+          gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+        });
+      });
+
+      // Hiệu ứng Nghiêng Thẻ 3D (3D Card Tilt & Glare) khi lướt chuột lên từng Card
+      document.querySelectorAll('.tilt-card').forEach((card) => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const rotY = ((x / rect.width) - 0.5) * 16;
+          const rotX = ((y / rect.height) - 0.5) * -16;
+
+          card.style.setProperty('--cx', x + 'px');
+          card.style.setProperty('--cy', y + 'px');
+
+          gsap.to(card, {
+            rotateX: rotX,
+            rotateY: rotY,
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, {
+            rotateX: 0,
+            rotateY: 0,
+            duration: 0.7,
+            ease: 'power3.out'
+          });
+        });
+      });
+
+      /* =========================================================================
+       * 3. THREE.JS 3D HERO RING & RENAISSANCE CLOUDS (Chuẩn phong cách EnigmasCult)
+       * ========================================================================= */
+      const canvas = document.getElementById('webgl-stage');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 8.5);
+
+      // Ánh sáng Chiaroscuro (Vàng cổ điển + Đỏ Crimson + Xanh đêm)
+      scene.add(new THREE.AmbientLight(0x28202c, 1.2));
+
+      const goldLight = new THREE.PointLight(0xffb85c, 3.2, 22);
+      goldLight.position.set(4, 3, 5);
+      scene.add(goldLight);
+
+      const crimsonLight = new THREE.PointLight(0xd93829, 2.4, 20);
+      crimsonLight.position.set(-4, -3, 4);
+      scene.add(crimsonLight);
+
+      const rimLight = new THREE.DirectionalLight(0xf5efe6, 1.5);
+      rimLight.position.set(0, 6, -5);
+      scene.add(rimLight);
+
+      // --- Cụm Nhẫn Cổ Vật 3D (The Cult Hero Ring) ---
+      const relicGroup = new THREE.Group();
+      scene.add(relicGroup);
+
+      // Vòng nhẫn chính mạ vàng/chrome khắc nổi
+      const outerRingGeo = new THREE.TorusGeometry(2.05, 0.22, 36, 120);
+      const outerRingMat = new THREE.MeshStandardMaterial({
+        color: 0xd4a857,
+        metalness: 0.92,
+        roughness: 0.18
+      });
+      const outerRing = new THREE.Mesh(outerRingGeo, outerRingMat);
+      relicGroup.add(outerRing);
+
+      // Vòng nhẫn mảnh bên trong xoay ngược chiều
+      const innerRingGeo = new THREE.TorusGeometry(1.52, 0.05, 24, 100);
+      const innerRingMat = new THREE.MeshStandardMaterial({
+        color: 0xe8e2d8,
+        metalness: 0.95,
+        roughness: 0.12
+      });
+      const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+      innerRing.rotation.x = 0.65;
+      relicGroup.add(innerRing);
+
+      // Khối Octahedron kim loại lơ lửng ở tâm nhẫn
+      const coreGeo = new THREE.OctahedronGeometry(0.68, 0);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x1a161f,
+        metalness: 0.85,
+        roughness: 0.22,
+        emissive: 0x33100d,
+        emissiveIntensity: 0.4
+      });
+      const coreRelic = new THREE.Mesh(coreGeo, coreMat);
+      relicGroup.add(coreRelic);
+
+      // 12 Đinh tán cổ vật chạy quanh vành nhẫn
+      const studGeo = new THREE.SphereGeometry(0.065, 12, 12);
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        const stud = new THREE.Mesh(studGeo, innerRingMat);
+        stud.position.set(Math.cos(a) * 2.28, Math.sin(a) * 2.28, 0);
+        outerRing.add(stud);
+      }
+
+      // --- Các đám mây sơn dầu Phục Hưng (Renaissance Clouds) trôi lơ lửng ---
+      function makeRenaissanceCloudTexture() {
+        const c = document.createElement('canvas');
+        c.width = 512; c.height = 512;
+        const g = c.getContext('2d');
+        const grd = g.createRadialGradient(256, 256, 20, 256, 256, 245);
+        grd.addColorStop(0.0, 'rgba(185, 138, 92, 0.34)');
+        grd.addColorStop(0.45, 'rgba(92, 64, 58, 0.18)');
+        grd.addColorStop(1.0, 'rgba(10, 8, 12, 0)');
+        g.fillStyle = grd;
+        g.fillRect(0, 0, 512, 512);
+        return new THREE.CanvasTexture(c);
+      }
+
+      const cloudTex = makeRenaissanceCloudTexture();
+      const cloudPlanes = [];
+      for (let i = 0; i < 14; i++) {
+        const mat = new THREE.MeshBasicMaterial({
+          map: cloudTex,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 3.8), mat);
+        plane.position.set(
+          (Math.random() - 0.5) * 11,
+          (Math.random() - 0.5) * 6,
+          (Math.random() - 0.5) * 4 - 1.5
+        );
+        plane.rotation.z = Math.random() * Math.PI;
+        scene.add(plane);
+        cloudPlanes.push({ mesh: plane, speed: (Math.random() - 0.5) * 0.003 });
+      }
+
+      /* =========================================================================
+       * 4. GSAP SCROLL ANIMATIONS (Hero -> Manifesto -> Horizontal Pin)
+       * ========================================================================= */
+      let scrollProgress = 0;
+      ScrollTrigger.create({
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => {
+          scrollProgress = self.progress;
+        }
+      });
+
+      // Tách từng từ trong Mini Manifesto để sáng dần khi cuộn chuột
+      const manifestoEl = document.getElementById('manifestoText');
+      const rawHTML = manifestoEl.innerHTML;
+      manifestoEl.innerHTML = rawHTML
+        .split(/(\s+|<span[^>]*>.*?<\/span>)/g)
+        .map((chunk) => {
+          if (!chunk || /^\s+$/.test(chunk)) return chunk;
+          if (chunk.startsWith('<span')) {
+            return chunk.replace('class="gold-word"', 'class="m-word gold-word"');
+          }
+          return `<span class="m-word">${chunk}</span>`;
+        })
+        .join('');
+
+      gsap.to('.m-word', {
+        opacity: 1,
+        stagger: 0.08,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#manifesto',
+          start: 'top 72%',
+          end: 'bottom 65%',
+          scrub: true
+        }
+      });
+
+      // Cuộn ngang (Horizontal Pin) cho phần 3 Rituals
+      const track = document.getElementById('ritualsTrack');
+      gsap.to(track, {
+        x: () => -(track.scrollWidth - window.innerWidth + window.innerWidth * 0.08),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '#rituals',
+          start: 'top top',
+          end: () => '+=' + (track.scrollWidth - window.innerWidth),
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true
+        }
+      });
+
+      /* =========================================================================
+       * 5. VÒNG LẶP RENDER 60FPS (Xoay Nhẫn 3D theo Chuột & Cuộn)
+       * ========================================================================= */
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        mouseNorm.x += (mouseNorm.tx - mouseNorm.x) * 0.06;
+        mouseNorm.y += (mouseNorm.ty - mouseNorm.y) * 0.06;
+
+        // Xoay Nhẫn 3D kết hợp giữa vị trí chuột, thời gian và tiến độ cuộn trang
+        outerRing.rotation.x = t * 0.25 + scrollProgress * Math.PI * 2 + mouseNorm.y * 0.55;
+        outerRing.rotation.y = t * 0.35 + scrollProgress * Math.PI * 1.5 + mouseNorm.x * 0.65;
+
+        innerRing.rotation.x = -t * 0.45 + scrollProgress * Math.PI * 3;
+        innerRing.rotation.z = t * 0.3 + mouseNorm.x * 0.4;
+
+        coreRelic.rotation.y = -t * 0.8;
+        coreRelic.rotation.x = t * 0.5;
+        coreRelic.position.y = Math.sin(t * 2.0) * 0.12;
+
+        // Di chuyển cụm 3D nhẹ nhàng theo chuột
+        relicGroup.position.x = mouseNorm.x * 0.45;
+        relicGroup.position.y = -mouseNorm.y * 0.35;
+        const scaleVal = 1 + Math.sin(scrollProgress * Math.PI) * 0.32;
+        relicGroup.scale.setScalar(scaleVal);
+
+        // Xoay nhẹ các đám mây Phục Hưng
+        for (const c of cloudPlanes) {
+          c.mesh.rotation.z += c.speed;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+  </script>
+</body>
+</html>
+

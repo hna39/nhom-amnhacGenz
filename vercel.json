@@ -1,0 +1,6 @@
+{
+  "buildCommand": "node build-static.js",
+  "outputDirectory": "dist",
+  "installCommand": "echo \"Không cần cài thư viện\"",
+  "framework": null
+}

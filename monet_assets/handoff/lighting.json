@@ -1,0 +1,80 @@
+[
+  {
+    "id": "dawn",
+    "label": "Рассвет",
+    "at": 0,
+    "color": "#FFD4C1",
+    "power": 850,
+    "fog": "#C7AEC8",
+    "density": 0.012,
+    "exposure": 0.15,
+    "water": "#819DAB",
+    "picture": 110,
+    "sky": 0.8
+  },
+  {
+    "id": "noon",
+    "label": "Полдень",
+    "at": 0.23,
+    "color": "#DEEBFF",
+    "power": 1500,
+    "fog": "#D2E0EF",
+    "density": 0.004,
+    "exposure": 0,
+    "water": "#91AFB7",
+    "picture": 80,
+    "sky": 1.1
+  },
+  {
+    "id": "afternoon",
+    "label": "После полудня",
+    "at": 0.45,
+    "color": "#FFD29A",
+    "power": 1200,
+    "fog": "#D8C6BA",
+    "density": 0.006,
+    "exposure": -0.1,
+    "water": "#9EADA4",
+    "picture": 140,
+    "sky": 0.9
+  },
+  {
+    "id": "sunset",
+    "label": "Закат",
+    "at": 0.595,
+    "color": "#FF9C73",
+    "power": 720,
+    "fog": "#8E769F",
+    "density": 0.015,
+    "exposure": 0.1,
+    "water": "#837B99",
+    "picture": 200,
+    "sky": 0.55
+  },
+  {
+    "id": "twilight",
+    "label": "Сумерки",
+    "at": 0.67,
+    "color": "#8999E8",
+    "power": 260,
+    "fog": "#60668C",
+    "density": 0.019,
+    "exposure": 0.25,
+    "water": "#566881",
+    "picture": 240,
+    "sky": 0.22
+  },
+  {
+    "id": "night",
+    "label": "Ночь",
+    "at": 0.78,
+    "color": "#344A92",
+    "power": 70,
+    "fog": "#202B51",
+    "density": 0.012,
+    "exposure": 0.35,
+    "water": "#263E65",
+    "picture": 60,
+    "sky": 0.06
+  }
+]

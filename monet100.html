@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Monet 100 — A Century Without Claude Monet (1926–2026)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ivory: #f5f1e8;
+      --muted: rgba(245, 241, 232, 0.62);
+      --faint: rgba(245, 241, 232, 0.16);
+      --gold: #dfb874;
+      --glass: rgba(14, 21, 26, 0.52);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      background: #0d151a;
+      color: var(--ivory);
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* Đường cuộn ảo dài 900vh để điều khiển Camera 3D lướt trên mặt nước */
+    .scroll-proxy {
+      height: 900vh;
+    }
+
+    /* WebGL Canvas cố định toàn màn hình */
+    #webgl-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      display: block;
+      transition: filter 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Hiệu ứng mô phỏng thị lực đục thủy tinh thể của Monet (1912–1922) */
+    body.cataract-mode #webgl-canvas {
+      filter: blur(3.5px) sepia(0.65) hue-rotate(-22deg) saturate(1.65) contrast(1.12);
+    }
+
+    /* Lớp họa tiết vải bố sơn dầu (Canvas Linen Grain) */
+    .canvas-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      opacity: 0.08;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23c)'/></svg>");
+    }
+
+    /* =========================================================================
+     * TOP MINIMALIST MUSEUM HUD
+     * ========================================================================= */
+    header.top-hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 26px 42px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .brand-lockup {
+      pointer-events: auto;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .brand-lockup h1 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.55rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .brand-lockup span {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .hud-center-counter {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--faint);
+      padding: 8px 22px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .hud-center-counter strong {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+    }
+
+    .hud-actions {
+      pointer-events: auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    .hud-btn {
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      background: var(--glass);
+      border: 1px solid var(--faint);
+      padding: 9px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+    }
+
+    .hud-btn:hover,
+    .hud-btn[aria-pressed="true"] {
+      background: var(--ivory);
+      color: #0d151a;
+      border-color: var(--ivory);
+    }
+
+    /* =========================================================================
+     * EDITORIAL CHAPTER OVERLAYS (Đồng bộ với vị trí Z của Camera)
+     * ========================================================================= */
+    .chapter-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      padding: 0 7vw;
+    }
+
+    .chapter-card {
+      max-width: 470px;
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .chapter-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chapter-eyebrow::before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .chapter-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(2.8rem, 5.4vw, 5.2rem);
+      font-weight: 300;
+      line-height: 0.98;
+      margin-bottom: 18px;
+    }
+
+    .chapter-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .chapter-desc {
+      font-size: 0.92rem;
+      line-height: 1.72;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 20px;
+    }
+
+    .painting-caption {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 3px;
+      padding-left: 14px;
+      border-left: 1px solid var(--gold);
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      color: var(--ivory);
+    }
+
+    .painting-caption small {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-style: normal;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* =========================================================================
+     * BOTTOM CHRONOLOGICAL TIMELINE BAR (5 CHAPTERS: LE HAVRE -> GIVERNY)
+     * ========================================================================= */
+    nav.timeline-bar {
+      position: fixed;
+      left: 42px;
+      right: 42px;
+      bottom: 28px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeline-track {
+      width: 100%;
+      height: 1px;
+      background: var(--faint);
+      position: relative;
+    }
+
+    .timeline-progress {
+      position: absolute;
+      left: 0;
+      top: -1px;
+      height: 3px;
+      background: var(--gold);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .timeline-nodes {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .t-node {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: color 0.3s ease, transform 0.3s ease;
+      padding: 4px 0;
+    }
+
+    .t-node:hover,
+    .t-node.active {
+      color: var(--ivory);
+      transform: translateY(-2px);
+    }
+
+    .t-node .t-year {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+    }
+
+    .t-node .t-place {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 820px) {
+      header.top-hud {
+        padding: 18px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .hud-center-counter {
+        display: none;
+      }
+      nav.timeline-bar {
+        left: 20px;
+        right: 20px;
+        bottom: 18px;
+      }
+      .t-node .t-place {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="scroll-proxy" aria-hidden="true"></div>
+  <canvas id="webgl-canvas"></canvas>
+  <div class="canvas-grain"></div>
+
+  <!-- Top Museum Interface -->
+  <header class="top-hud">
+    <div class="brand-lockup">
+      <h1>Monet 100</h1>
+      <span>1926 — 2026 • A Century Without Claude Monet</span>
+    </div>
+
+    <div class="hud-center-counter">
+      <span>Year <strong id="hudYear">1872</strong></span>
+      <span>•</span>
+      <span>Catalogue <strong id="hudWork">0048</strong> / 1,247</span>
+    </div>
+
+    <div class="hud-actions">
+      <button class="hud-btn" id="btnCataract" aria-pressed="false" title="Simulate Monet's 1912–1922 Cataract Vision">
+        Cataract Vision (1918)
+      </button>
+      <button class="hud-btn" id="btnArchive" aria-pressed="false">
+        1,247 Archive Orbit
+      </button>
+      <button class="hud-btn" id="btnAudio" aria-pressed="false">
+        Sound: Off
+      </button>
+    </div>
+  </header>
+
+  <!-- Editorial Story Card -->
+  <section class="chapter-stage">
+    <div class="chapter-card" id="chapterCard">
+      <div class="chapter-eyebrow" id="chEyebrow">Chapter I • 1840–1871</div>
+      <h2 class="chapter-title" id="chTitle">Le Havre &amp; <em>The Rising Sun</em></h2>
+      <p class="chapter-desc" id="chDesc">
+        Scroll to glide across the water. On a misty morning in the port of Le Havre, rapid strokes of cobalt mist and a blazing orange disk gave a name to a revolution: Impressionism.
+      </p>
+      <div class="painting-caption">
+        <span id="chPainting">Impression, soleil levant (1872)</span>
+        <small id="chMeta">Musée Marmottan Monet • Oil on Canvas</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Chronological Scrubber -->
+  <nav class="timeline-bar" aria-label="Chronological Chapters">
+    <div class="timeline-track">
+      <div class="timeline-progress" id="tlProgress"></div>
+    </div>
+    <div class="timeline-nodes">
+      <button class="t-node active" data-stop="0">
+        <span class="t-year">01 / 1872</span>
+        <span class="t-place">Le Havre</span>
+      </button>
+      <button class="t-node" data-stop="0.25">
+        <span class="t-year">02 / 1875</span>
+        <span class="t-place">Argenteuil</span>
+      </button>
+      <button class="t-node" data-stop="0.50">
+        <span class="t-year">03 / 1877</span>
+        <span class="t-place">Paris</span>
+      </button>
+      <button class="t-node" data-stop="0.75">
+        <span class="t-year">04 / 1880</span>
+        <span class="t-place">Vétheuil</span>
+      </button>
+      <button class="t-node" data-stop="0.98">
+        <span class="t-year">05 / 1883–1926</span>
+        <span class="t-place">Giverny (Nymphéas)</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <script>
+    (function () {
+      /* =========================================================================
+       * 1. DỮ LIỆU 5 CHƯƠNG CUỘC ĐỜI MONET (100YEARSMONET.COM STRUCTURE)
+       * ========================================================================= */
+      const chapters = [
+        {
+          eyebrow: 'Chapter I • 1840–1872',
+          title: 'Le Havre & <em>The Rising Sun</em>',
+          desc: 'Scroll to walk on water. In the misty harbor of Le Havre, broken strokes of slate-blue fog and a glowing orange sun gave birth to the movement that changed modern art forever.',
+          painting: 'Impression, soleil levant (1872)',
+          meta: 'Catalogue W.263 • Le Havre Harbor',
+          yearStart: 1865,
+          workStart: 1,
+          skyColor: new THREE.Color(0x283845),
+          waterColor: new THREE.Color(0x1b2a36),
+          palette: ['#2e4352', '#4c6878', '#7a929e', '#e86f38', '#f4a261']
+        },
+        {
+          eyebrow: 'Chapter II • 1871–1878',
+          title: 'Argenteuil & <em>Golden Summers</em>',
+          desc: 'Along the banks of the Seine at Argenteuil, Monet painted en plein air from his floating studio boat—capturing scarlet poppy fields and sunlit sails dancing on cerulean water.',
+          painting: 'Les Coquelicots à Argenteuil (1873)',
+          meta: 'Catalogue W.274 • Musée d’Orsay',
+          yearStart: 1873,
+          workStart: 240,
+          skyColor: new THREE.Color(0x3a5a78),
+          waterColor: new THREE.Color(0x24425c),
+          palette: ['#4e7ba6', '#8cb8d9', '#6e8c54', '#d9483b', '#f2df9b']
+        },
+        {
+          eyebrow: 'Chapter III • 1877–1878',
+          title: 'Paris & <em>Cathedrals of Steam</em>',
+          desc: 'Returning to Paris, Monet turned the iron roof of the Gare Saint-Lazare into a symphony of violet locomotive smoke, coal dust, and fractured shafts of morning sunlight.',
+          painting: 'La Gare Saint-Lazare (1877)',
+          meta: 'Catalogue W.438 • 12-Painting Series',
+          yearStart: 1877,
+          workStart: 460,
+          skyColor: new THREE.Color(0x3b3548),
+          waterColor: new THREE.Color(0x24202e),
+          palette: ['#3d384d', '#6e6882', '#b8b2c9', '#d9a66c', '#2a2633']
+        },
+        {
+          eyebrow: 'Chapter IV • 1878–1883',
+          title: 'Vétheuil & <em>The Frozen Seine</em>',
+          desc: 'Marked by harsh winters and the loss of Camille, the Vétheuil canvases shimmer with drifting ice floes, silver-blue silence, and the resilience of an artist painting through grief.',
+          painting: 'La Débâcle sur la Seine (1880)',
+          meta: 'Catalogue W.565 • Vétheuil Winter Series',
+          yearStart: 1880,
+          workStart: 690,
+          skyColor: new THREE.Color(0x2c424d),
+          waterColor: new THREE.Color(0x192b33),
+          palette: ['#385463', '#7ea1b3', '#cfe0e8', '#8c7a6b', '#1e333d']
+        },
+        {
+          eyebrow: 'Chapter V • 1883–1926',
+          title: 'Giverny & <em>Eternal Water Lilies</em>',
+          desc: 'For his final 43 years at Giverny—through cataracts and recovery—Monet dissolved the horizon altogether, immersing the viewer inside the infinite reflections of Les Nymphéas.',
+          painting: 'Les Nymphéas — Le Bassin aux Nymphéas (1919)',
+          meta: 'Catalogue W.1983 • Orangerie & Giverny Gardens',
+          yearStart: 1899,
+          workStart: 980,
+          skyColor: new THREE.Color(0x183632),
+          waterColor: new THREE.Color(0x0f2622),
+          palette: ['#1e4d44', '#3b7a6b', '#52638a', '#d98ca3', '#e8c574']
+        }
+      ];
+
+      /* =========================================================================
+       * 2. KHỞI TẠO KHÔNG GIAN 3D THREE.JS ("WALKING ON WATER" CORRIDOR)
+       * ========================================================================= */
+      const canvas = document.getElementById('webgl-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      const scene = new THREE.Scene();
+      const currentBgColor = chapters[0].skyColor.clone();
+      scene.background = currentBgColor;
+      scene.fog = new THREE.FogExp2(currentBgColor, 0.024);
+
+      const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 180);
+      camera.position.set(0, 1.65, 6);
+
+      // Ánh sáng Ấn tượng (Impressionist Sunlight)
+      const hemiLight = new THREE.HemisphereLight(0xfff6e5, 0x1b2e3b, 1.1);
+      scene.add(hemiLight);
+
+      const sunLight = new THREE.DirectionalLight(0xffdfb8, 1.25);
+      sunLight.position.set(6, 12, 8);
+      scene.add(sunLight);
+
+      /* =========================================================================
+       * 3. VẼ TRANH SƠN DẦU IMPRESSIONIST IMPASTO TRÊN CANVAS 3D
+       * ========================================================================= */
+      let seed = 77;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647), (seed - 1) / 2147483646);
+
+      function generateImpressionistPaintingTexture(palette, chapterIdx) {
+        const W = 512, H = 360;
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        const g = c.getContext('2d');
+
+        // Lớp lót nền chuyển sắc
+        const grad = g.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, palette[0]);
+        grad.addColorStop(0.52, palette[1]);
+        grad.addColorStop(1, palette[2]);
+        g.fillStyle = grad;
+        g.fillRect(0, 0, W, H);
+
+        // Hàng nghìn nhát cọ sơn dầu đắp nổi (Impasto Brushstrokes) đặc trưng của Monet
+        for (let i = 0; i < 1600; i++) {
+          const x = rnd() * W;
+          const y = rnd() * H;
+          const bw = 8 + rnd() * 24;
+          const bh = 3 + rnd() * 7;
+          const angle = (rnd() - 0.5) * 0.35;
+
+          g.save();
+          g.translate(x, y);
+          g.rotate(angle);
+          const colIdx = Math.floor(rnd() * palette.length);
+          g.fillStyle = palette[colIdx];
+          g.globalAlpha = 0.35 + rnd() * 0.55;
+          g.beginPath();
+          g.ellipse(0, 0, bw * 0.5, bh * 0.5, 0, 0, Math.PI * 2);
+          g.fill();
+          g.restore();
+        }
+
+        // Điểm nhấn đặc trưng từng thời kỳ
+        if (chapterIdx === 0) {
+          // Mặt trời đỏ cam rực rỡ trên cảng Le Havre + bóng nắng xuống mặt nước
+          g.fillStyle = '#ff622b';
+          g.globalAlpha = 0.92;
+          g.beginPath();
+          g.arc(W * 0.64, H * 0.34, 24, 0, Math.PI * 2);
+          g.fill();
+          for (let k = 0; k < 18; k++) {
+            g.fillRect(W * 0.64 - 16 + rnd() * 12, H * 0.52 + k * 8, 22 + rnd() * 14, 4);
+          }
+        } else if (chapterIdx === 4) {
+          // Những cụm hoa súng Nymphéas hồng & trắng nổi trên hồ Giverny
+          for (let k = 0; k < 28; k++) {
+            const lx = 60 + rnd() * (W - 120);
+            const ly = H * 0.35 + rnd() * (H * 0.55);
+            g.fillStyle = '#245949';
+            g.globalAlpha = 0.85;
+            g.beginPath();
+            g.ellipse(lx, ly, 26, 9, 0, 0, Math.PI * 2);
+            g.fill();
+            g.fillStyle = rnd() < 0.6 ? '#f7d4df' : '#fff7d6';
+            g.beginPath();
+            g.arc(lx, ly - 3, 7, 0, Math.PI * 2);
+            g.fill();
+          }
+        }
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.encoding = THREE.sRGBEncoding;
+        return tex;
+      }
+
+      /* =========================================================================
+       * 4. DỰNG HÀNH LANG KỶ VẬT 3D & MẶT NƯỚC PHẢN CHIẾU HOA SÚNG
+       * ========================================================================= */
+      const galleryGroup = new THREE.Group();
+      scene.add(galleryGroup);
+
+      const paintingMeshes = [];
+      const Z_STEP = -24; // Khoảng cách trục Z giữa mỗi chương
+
+      chapters.forEach((ch, idx) => {
+        const zPos = idx * Z_STEP;
+        const tex = generateImpressionistPaintingTexture(ch.palette, idx);
+
+        // Khung tranh chính lơ lửng trên mặt nước bên phải để cân đối với chữ bên trái
+        const frameGroup = new THREE.Group();
+        frameGroup.position.set(1.85, 1.85, zPos);
+        frameGroup.rotation.y = -0.22;
+        galleryGroup.add(frameGroup);
+
+        const geo = new THREE.PlaneGeometry(4.4, 3.05, 32, 32);
+        // Uốn nhẹ bề mặt tranh tạo cảm giác không gian 3D
+        const pos = geo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          pos.setZ(i, -Math.pow(x * 0.3, 2) * 0.25);
+        }
+        geo.computeVertexNormals();
+
+        const mat = new THREE.MeshStandardMaterial({
+          map: tex,
+          roughness: 0.65,
+          metalness: 0.05,
+          side: THREE.DoubleSide
+        });
+        const painting = new THREE.Mesh(geo, mat);
+        frameGroup.add(painting);
+
+        // Viền khung vàng mảnh
+        const border = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.PlaneGeometry(4.56, 3.2)),
+          new THREE.LineBasicMaterial({ color: 0xdfb874, transparent: true, opacity: 0.55 })
+        );
+        border.position.z = 0.02;
+        frameGroup.add(border);
+
+        // Hình phản chiếu mờ của bức tranh dưới mặt nước
+        const reflectMesh = new THREE.Mesh(
+          geo,
+          new THREE.MeshBasicMaterial({
+            map: tex,
+            transparent: true,
+            opacity: 0.22,
+            side: THREE.DoubleSide
+          })
+        );
+        reflectMesh.scale.y = -1;
+        reflectMesh.position.y = -3.35;
+        frameGroup.add(reflectMesh);
+
+        paintingMeshes.push({ group: frameGroup, baseZ: zPos, baseY: 1.85 });
+      });
+
+      // --- Đám mây 1,247 bức tranh nhỏ (The 1,247 Catalogue Raisonne Matrix) ---
+      const archiveInstancedGeo = new THREE.PlaneGeometry(0.65, 0.46);
+      const archiveMat = new THREE.MeshBasicMaterial({
+        color: 0xe8d5b5,
+        transparent: true,
+        opacity: 0.45,
+        side: THREE.DoubleSide
+      });
+      const TOTAL_WORKS = 1247;
+      const archiveMesh = new THREE.InstancedMesh(archiveInstancedGeo, archiveMat, TOTAL_WORKS);
+      const dummy = new THREE.Object3D();
+      const paletteColors = [
+        new THREE.Color(0x5b829e),
+        new THREE.Color(0xe67e51),
+        new THREE.Color(0x4b7d6b),
+        new THREE.Color(0xd996ab),
+        new THREE.Color(0xe5c478)
+      ];
+
+      for (let i = 0; i < TOTAL_WORKS; i++) {
+        const t = i / TOTAL_WORKS;
+        const angle = i * 0.42;
+        const radius = 5.2 + (i % 9) * 1.45;
+        const z = -t * 115 + 8;
+        dummy.position.set(
+          Math.cos(angle) * radius,
+          0.3 + Math.sin(i * 0.7) * 4.5,
+          z
+        );
+        dummy.rotation.y = -angle * 0.25;
+        dummy.updateMatrix();
+        archiveMesh.setMatrixAt(i, dummy.matrix);
+        archiveMesh.setColorAt(i, paletteColors[i % paletteColors.length]);
+      }
+      archiveMesh.instanceMatrix.needsUpdate = true;
+      if (archiveMesh.instanceColor) archiveMesh.instanceColor.needsUpdate = true;
+      galleryGroup.add(archiveMesh);
+
+      // --- Mặt nước Ấn tượng gồm 6,000 hạt cọ màu lấp lánh & Hoa Súng (Walking on Water) ---
+      const waterParticleCount = 6000;
+      const wGeo = new THREE.BufferGeometry();
+      const wPos = new Float32Array(waterParticleCount * 3);
+      const wCol = new Float32Array(waterParticleCount * 3);
+
+      for (let i = 0; i < waterParticleCount; i++) {
+        wPos[i * 3]     = (rnd() - 0.5) * 34;
+        wPos[i * 3 + 1] = (rnd() - 0.5) * 0.08; // Nằm sát mặt nước y = 0
+        wPos[i * 3 + 2] = -rnd() * 120 + 12;
+
+        const c = paletteColors[Math.floor(rnd() * paletteColors.length)];
+        wCol[i * 3]     = c.r;
+        wCol[i * 3 + 1] = c.g;
+        wCol[i * 3 + 2] = c.b;
+      }
+      wGeo.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
+      wGeo.setAttribute('color', new THREE.BufferAttribute(wCol, 3));
+
+      const wMat = new THREE.PointsMaterial({
+        size: 0.14,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.78
+      });
+      const waterSurfacePoints = new THREE.Points(wGeo, wMat);
+      scene.add(waterSurfacePoints);
+
+      /* =========================================================================
+       * 5. ĐỒNG BỘ CUỘN TRANG, CHUYỂN CHƯƠNG & HIỆU ỨNG CHUỘT
+       * ========================================================================= */
+      let scrollNorm = 0;
+      let targetScrollNorm = 0;
+      let isArchiveOrbit = false;
+      const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+
+      const chEyebrow = document.getElementById('chEyebrow');
+      const chTitle = document.getElementById('chTitle');
+      const chDesc = document.getElementById('chDesc');
+      const chPainting = document.getElementById('chPainting');
+      const chMeta = document.getElementById('chMeta');
+      const hudYear = document.getElementById('hudYear');
+      const hudWork = document.getElementById('hudWork');
+      const tlProgress = document.getElementById('tlProgress');
+      const tNodes = document.querySelectorAll('.t-node');
+      let activeChapterIndex = 0;
+
+      function updateUIForScroll(p) {
+        tlProgress.style.width = (p * 100).toFixed(1) + '%';
+
+        const year = Math.round(1865 + p * (1926 - 1865));
+        const workNum = Math.min(1247, Math.max(1, Math.round(1 + p * 1246)));
+        hudYear.textContent = year;
+        hudWork.textContent = String(workNum).padStart(4, '0');
+
+        const idx = Math.min(chapters.length - 1, Math.floor(p * chapters.length + 0.1));
+        if (idx !== activeChapterIndex) {
+          activeChapterIndex = idx;
+          const ch = chapters[idx];
+          const card = document.getElementById('chapterCard');
+          gsap.fromTo(card, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' });
+          chEyebrow.textContent = ch.eyebrow;
+          chTitle.innerHTML = ch.title;
+          chDesc.textContent = ch.desc;
+          chPainting.textContent = ch.painting;
+          chMeta.textContent = ch.meta;
+
+          tNodes.forEach((n, i) => n.classList.toggle('active', i === idx));
+        }
+      }
+
+      window.addEventListener('scroll', () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        targetScrollNorm = max > 0 ? Math.max(0, Math.min(1, window.scrollY / max)) : 0;
+      }, { passive: true });
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // Bấm vào các mốc thời gian ở thanh dưới cùng để lướt thẳng tới chương đó
+      tNodes.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const stop = parseFloat(btn.getAttribute('data-stop') || '0');
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          window.scrollTo({ top: stop * max, behavior: 'smooth' });
+        });
+      });
+
+      // Nút bật/tắt chế độ thị lực đục thủy tinh thể (Cataract Vision 1918)
+      const btnCataract = document.getElementById('btnCataract');
+      btnCataract.addEventListener('click', () => {
+        const active = document.body.classList.toggle('cataract-mode');
+        btnCataract.setAttribute('aria-pressed', String(active));
+      });
+
+      // Nút xem toàn cảnh 1,247 bức tranh xoay quanh không gian 3D
+      const btnArchive = document.getElementById('btnArchive');
+      btnArchive.addEventListener('click', () => {
+        isArchiveOrbit = !isArchiveOrbit;
+        btnArchive.setAttribute('aria-pressed', String(isArchiveOrbit));
+        document.getElementById('chapterCard').style.opacity = isArchiveOrbit ? '0.15' : '1';
+      });
+
+      /* =========================================================================
+       * 6. NHẠC NỀN PIANO ẤN TƯỢNG (DEBUSSY / SATIE IMPRESSIONIST SYNTH)
+       * ========================================================================= */
+      let ac = null, soundOn = false, noteTimer = null;
+      const DEBUSSY_SCALE = [261.63, 293.66, 329.63, 369.99, 440.0, 493.88, 523.25, 659.25];
+
+      function playImpressionistNote() {
+        if (!soundOn || !ac) return;
+        const now = ac.currentTime;
+        const freq = DEBUSSY_SCALE[Math.floor(Math.random() * DEBUSSY_SCALE.length)];
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.09, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start(now);
+        osc.stop(now + 3.9);
+        noteTimer = setTimeout(playImpressionistNote, 750 + Math.random() * 1100);
+      }
+
+      const btnAudio = document.getElementById('btnAudio');
+      btnAudio.addEventListener('click', () => {
+        if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+        if (ac.state === 'suspended') ac.resume();
+        soundOn = !soundOn;
+        btnAudio.setAttribute('aria-pressed', String(soundOn));
+        btnAudio.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
+        clearTimeout(noteTimer);
+        if (soundOn) playImpressionistNote();
+      });
+
+      /* =========================================================================
+       * 7. VÒNG LẶP RENDER 60FPS (WALKING ON WATER + ATMOSPHERE SHIFT)
+       * ========================================================================= */
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        scrollNorm += (targetScrollNorm - scrollNorm) * 0.06;
+        mouse.x += (mouse.tx - mouse.x) * 0.05;
+        mouse.y += (mouse.ty - mouse.y) * 0.05;
+
+        updateUIForScroll(scrollNorm);
+
+        // Chuyển màu bầu trời & sương mù mượt mà giữa 5 thời kỳ của Monet
+        const exactCh = scrollNorm * (chapters.length - 1);
+        const cIdx = Math.min(chapters.length - 2, Math.floor(exactCh));
+        const frac = exactCh - cIdx;
+        currentBgColor.lerpColors(chapters[cIdx].skyColor, chapters[cIdx + 1].skyColor, frac);
+        scene.background = currentBgColor;
+        scene.fog.color.copy(currentBgColor);
+
+        // Đường bay Camera lướt trên mặt nước ("Walking on Water")
+        const targetZ = 5.8 - scrollNorm * (chapters.length - 1) * 24;
+        if (isArchiveOrbit) {
+          camera.position.x += (Math.sin(t * 0.35) * 14 - camera.position.x) * 0.05;
+          camera.position.y += (5.5 - camera.position.y) * 0.05;
+          camera.position.z += (-45 - camera.position.z) * 0.05;
+          camera.lookAt(0, 1.5, -48);
+        } else {
+          const walkBob = Math.sin(scrollNorm * 45 + t * 1.6) * 0.045;
+          camera.position.x += (mouse.x * 0.65 - camera.position.x) * 0.08;
+          camera.position.y += (1.65 + walkBob - mouse.y * 0.32 - camera.position.y) * 0.08;
+          camera.position.z = targetZ;
+          camera.lookAt(mouse.x * 0.9, 1.55 - mouse.y * 0.4, targetZ - 7.5);
+        }
+
+        // Chuyển động bồng bềnh nhẹ của các bức tranh trên mặt nước
+        paintingMeshes.forEach((item, i) => {
+          item.group.position.y = item.baseY + Math.sin(t * 1.2 + i) * 0.06;
+        });
+
+        // Xoay nhẹ dải ngân hà 1,247 bức tranh phía xa
+        archiveMesh.rotation.z = Math.sin(t * 0.15) * 0.04;
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+  </script>
+</body>
+</html>
+

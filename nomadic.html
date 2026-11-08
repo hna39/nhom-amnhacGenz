@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Giao Thoa Âm Sắc — Moebius / Nomadic Tribe 2D Interactive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #2a211d;
+      --gold: #d9a74a;
+      --paper: #f6eedc;
+      --rose: #d96b70;
+      --jade: #3c6e63;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      background: #1d2d2a;
+      color: var(--ink);
+      font-family: "Be Vietnam Pro", system-ui, sans-serif;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* Chiều dài đường cuộn Z-axis */
+    .scroll-track {
+      height: 650vh;
+    }
+
+    /* Sân khấu cố định */
+    .viewport-stage {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .layer {
+      position: absolute;
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      transform-origin: 50% 48%;
+      will-change: transform, opacity;
+      pointer-events: none;
+    }
+
+    .layer svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* Nét vẽ Ligne Claire / Moebius đặc trưng */
+    .moebius-line {
+      stroke: #2c221e;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .gold-orbit {
+      stroke: rgba(217, 167, 74, 0.55);
+      stroke-dasharray: 6 8;
+      fill: none;
+    }
+
+    /* Chuyển động nội tại của các chi tiết 2D */
+    svg .spin-slow {
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation: spinSlow 95s linear infinite;
+    }
+    svg .spin-rev {
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation: spinRev 130s linear infinite;
+    }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+    @keyframes spinRev  { to { transform: rotate(-360deg); } }
+
+    svg .wing-L {
+      transform-box: fill-box;
+      transform-origin: 85% 65%;
+      animation: flapL 1.5s ease-in-out infinite;
+    }
+    svg .wing-R {
+      transform-box: fill-box;
+      transform-origin: 15% 65%;
+      animation: flapR 1.5s ease-in-out infinite;
+    }
+    @keyframes flapL {
+      0%, 100% { transform: rotate(-16deg); }
+      50% { transform: rotate(26deg); }
+    }
+    @keyframes flapR {
+      0%, 100% { transform: rotate(16deg); }
+      50% { transform: rotate(-26deg); }
+    }
+
+    svg .float-cloud {
+      animation: floatCloud 18s ease-in-out infinite alternate;
+    }
+    @keyframes floatCloud {
+      from { transform: translateX(-22px); }
+      to   { transform: translateX(22px); }
+    }
+
+    svg .boat-bob {
+      transform-box: fill-box;
+      transform-origin: 50% 80%;
+      animation: boatBob 4.5s ease-in-out infinite;
+    }
+    @keyframes boatBob {
+      0%, 100% { transform: translateY(0px) rotate(-1.2deg); }
+      50%      { transform: translateY(-5px) rotate(1.2deg); }
+    }
+
+    /* Lớp phủ hạt giấy cổ điển Moebius */
+    .paper-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      opacity: 0.11;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/><feColorMatrix values='0 0 0 0 .2 0 0 0 0 .15 0 0 0 0 .1 0 0 0 .9 0'/></filter><rect width='200' height='200' filter='url(%23g)'/></svg>");
+    }
+
+    /* Giao diện HUD tối giản phong cách Makemepulse */
+    .hud-top {
+      position: fixed;
+      top: 24px;
+      left: 36px;
+      right: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .badge-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: rgba(30, 44, 40, 0.72);
+      border: 1px solid rgba(217, 167, 74, 0.45);
+      padding: 8px 18px;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+    }
+
+    .sound-btn {
+      pointer-events: auto;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--paper);
+      background: rgba(30, 44, 40, 0.72);
+      border: 1px solid rgba(217, 167, 74, 0.45);
+      padding: 9px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.25s ease;
+    }
+
+    .sound-btn[aria-pressed="true"] {
+      background: var(--gold);
+      color: #1d2d2a;
+      border-color: var(--gold);
+    }
+
+    /* Nút tròn Hold-to-Bloom giống hệt 2019.makemepulse.com */
+    .bloom-prompt {
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .hold-circle {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(246, 238, 220, 0.16);
+      border: 1.5px solid rgba(246, 238, 220, 0.75);
+      display: grid;
+      place-items: center;
+      position: relative;
+      backdrop-filter: blur(6px);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+    }
+
+    .hold-circle::after {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--paper);
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    body.is-blooming .hold-circle {
+      transform: scale(1.22);
+      background: rgba(217, 167, 74, 0.32);
+      border-color: var(--gold);
+    }
+
+    body.is-blooming .hold-circle::after {
+      transform: scale(1.8);
+      background: var(--gold);
+    }
+
+    .bloom-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: rgba(26, 40, 36, 0.72);
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(246, 238, 220, 0.25);
+      backdrop-filter: blur(6px);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll-track" aria-hidden="true"></div>
+
+  <main class="viewport-stage" id="stage" title="Nhấn giữ chuột để đánh thức thảm hoa sen • Cuộn chuột để bay qua thung lũng">
+    <!-- Bảng màu & Gradient phong cách Ligne Claire / Moebius -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <!-- Bầu trời chiều hoàng hôn pha ngọc bích kiểu Moebius -->
+        <linearGradient id="mbSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#e9c39b" />
+          <stop offset="0.34" stop-color="#f5dec0" />
+          <stop offset="0.62" stop-color="#cbe0d0" />
+          <stop offset="1" stop-color="#6fa394" />
+        </linearGradient>
+
+        <!-- Mặt trời vàng cam Moebius -->
+        <linearGradient id="mbSun" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff4cc" />
+          <stop offset="0.55" stop-color="#f4b860" />
+          <stop offset="1" stop-color="#d97248" />
+        </linearGradient>
+
+        <!-- Đá vôi mặt sáng & mặt tối (Cel-shaded Karst) -->
+        <linearGradient id="rockLit" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#e8d3b5" />
+          <stop offset="0.6" stop-color="#b8be9c" />
+          <stop offset="1" stop-color="#6c8f7d" />
+        </linearGradient>
+        <linearGradient id="rockShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7c9685" />
+          <stop offset="0.6" stop-color="#4b7063" />
+          <stop offset="1" stop-color="#2c4a42" />
+        </linearGradient>
+
+        <!-- Núi gần đậm hơn -->
+        <linearGradient id="nearLit" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c9b489" />
+          <stop offset="1" stop-color="#537a68" />
+        </linearGradient>
+        <linearGradient id="nearShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#436659" />
+          <stop offset="1" stop-color="#1f3831" />
+        </linearGradient>
+
+        <!-- Mặt nước ngọc bích -->
+        <linearGradient id="mbWater" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#8cb8a8" />
+          <stop offset="0.45" stop-color="#4e8275" />
+          <stop offset="1" stop-color="#22453d" />
+        </linearGradient>
+
+        <!-- Mây Moebius kem hồng -->
+        <linearGradient id="mbCloud" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff9eb" />
+          <stop offset="0.7" stop-color="#f2d6b3" />
+          <stop offset="1" stop-color="#d9a882" />
+        </linearGradient>
+
+        <!-- Cánh sen hồng Ligne Claire -->
+        <linearGradient id="mbPetal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#b8d1a0" />
+          <stop offset="0.28" stop-color="#f9ebe5" />
+          <stop offset="0.7" stop-color="#eb8a96" />
+          <stop offset="1" stop-color="#c43c58" />
+        </linearGradient>
+
+        <!-- Lá sen xanh ngọc viền mực -->
+        <linearGradient id="mbLeaf" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#76a377" />
+          <stop offset="1" stop-color="#356147" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <!-- 6 Lớp không gian 2.5D Moebius -->
+    <div class="layer" data-d="7.0" data-px="0.015" id="L5"></div>
+    <div class="layer" data-d="3.8" data-px="0.032" id="L4"></div>
+    <div class="layer" data-d="2.6" data-px="0.050" id="L3"></div>
+    <div class="layer" data-d="1.85" data-part="-1" data-px="0.065" id="L2L"></div>
+    <div class="layer" data-d="1.85" data-part="1" data-px="0.065" id="L2R"></div>
+    <div class="layer" data-d="1.35" data-px="0.085" id="L1"></div>
+    <div class="layer" data-d="1.0" data-px="0.11" id="L0"></div>
+
+    <!-- Canvas hạt phấn & tia năng lượng nở hoa -->
+    <canvas id="particle-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:25;"></canvas>
+  </main>
+
+  <div class="paper-grain"></div>
+
+  <div class="hud-top">
+    <div class="badge-title">Nomadic Lotus • Ligne Claire 2.5D</div>
+    <button class="sound-btn" id="soundBtn" aria-pressed="false">Bật đàn Ngũ Cung</button>
+  </div>
+
+  <div class="bloom-prompt">
+    <div class="hold-circle"></div>
+    <div class="bloom-label">Cuộn chuột để bay qua cổng • Nhấn giữ chuột (hoặc phím Space) để hoa sen bung nở</div>
+  </div>
+
+  <script>
+    (function () {
+      const VB = 'viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"';
+      let seed = 19;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647), (seed - 1) / 2147483646);
+      const f = (n) => n.toFixed(1);
+
+      /* =========================================================================
+       * BỘ CÔNG CỤ VẼ TRANH 2D PHONG CÁCH MOEBIUS / 2019.MAKEMEPULSE.COM
+       * (Đường nét viền mực mảnh, mảng sáng/tối tách biệt, nét gạch hatching)
+       * ========================================================================= */
+
+      // 1. Vẽ núi đá vôi kiểu Moebius (Có mặt đón nắng, mặt khuất bóng và các đường gạch vân đá)
+      function moebiusMountain(cx, baseY, width, height, litFill, shadeFill, hasWaterfall) {
+        const leftX = cx - width * 0.5;
+        const rightX = cx + width * 0.5;
+        const topY = baseY - height;
+        const ridgeOffset = (rnd() - 0.5) * width * 0.14;
+        const peakX = cx + ridgeOffset;
+
+        // Đường sống núi ở giữa chia đôi mặt sáng (trái) và mặt tối (phải)
+        const midCtrlX = peakX - width * 0.06;
+        const midCtrlY = topY + height * 0.48;
+
+        // Mảng sáng bên trái
+        const litPath = `M${f(leftX)} ${f(baseY)}
+          C${f(leftX + width * 0.08)} ${f(baseY - height * 0.45)} ${f(peakX - width * 0.22)} ${f(topY + height * 0.08)} ${f(peakX)} ${f(topY)}
+          Q${f(midCtrlX)} ${f(midCtrlY)} ${f(cx + ridgeOffset * 0.4)} ${f(baseY)} Z`;
+
+        // Mảng tối bên phải
+        const shadePath = `M${f(cx + ridgeOffset * 0.4)} ${f(baseY)}
+          Q${f(midCtrlX)} ${f(midCtrlY)} ${f(peakX)} ${f(topY)}
+          C${f(peakX + width * 0.22)} ${f(topY + height * 0.08)} ${f(rightX - width * 0.08)} ${f(baseY - height * 0.45)} ${f(rightX)} ${f(baseY)} Z`;
+
+        // Các đường gạch chéo bóng đổ (Moebius cross-hatching strata lines)
+        let hatch = '';
+        const steps = 11;
+        for (let i = 1; i < steps; i++) {
+          const t = i / steps;
+          const y = topY + t * height * 0.88;
+          const span = width * 0.34 * t;
+          const x0 = peakX + ridgeOffset * (1 - t) * 0.3;
+          const x1 = x0 + span;
+          hatch += `M${f(x0)} ${f(y)} Q${f((x0 + x1) * 0.5)} ${f(y + 10)} ${f(x1)} ${f(y + 4)} `;
+          // Vân ngang ngắn bên mặt sáng
+          if (i % 2 === 0) {
+            const lx1 = x0 - span * 0.55;
+            hatch += `M${f(x0)} ${f(y)} L${f(lx1)} ${f(y + 6)} `;
+          }
+        }
+
+        let waterfall = '';
+        if (hasWaterfall) {
+          const wy = topY + height * 0.32;
+          waterfall = `
+            <path d="M${f(peakX - 8)} ${f(wy)} L${f(peakX + 10)} ${f(wy)} L${f(peakX + 24)} ${f(baseY)} L${f(peakX - 18)} ${f(baseY)} Z" fill="rgba(246,248,242,0.82)"/>
+            <path d="M${f(peakX - 2)} ${f(wy)} L${f(peakX - 6)} ${f(baseY)} M${f(peakX + 5)} ${f(wy + 15)} L${f(peakX + 10)} ${f(baseY)}" stroke="#3b695e" stroke-width="1.3"/>
+          `;
+        }
+
+        return `<g>
+          <path d="${litPath}" fill="${litFill}" class="moebius-line" stroke-width="1.6"/>
+          <path d="${shadePath}" fill="${shadeFill}" class="moebius-line" stroke-width="1.6"/>
+          <path d="${hatch}" fill="none" stroke="#233630" stroke-width="1.2" opacity="0.55" stroke-linecap="round"/>
+          ${waterfall}
+        </g>`;
+      }
+
+      // 2. Vẽ dải mây cuộn bậc thang kiểu Moebius / Makemepulse
+      function moebiusCloud(cx, cy, width, scale, flip) {
+        const dir = flip ? -1 : 1;
+        let puffs = '';
+        const count = 6;
+        for (let i = 0; i < count; i++) {
+          const t = i / (count - 1);
+          const px = cx + (t - 0.5) * width;
+          const r = scale * (28 + Math.sin(t * Math.PI) * 34 + (i % 2) * 8);
+          const py = cy - r * 0.55 - Math.sin(t * Math.PI) * 18 * scale;
+          puffs += `<circle cx="${f(px)}" cy="${f(py)}" r="${f(r)}" fill="url(#mbCloud)" class="moebius-line" stroke-width="1.6"/>`;
+          // Đường xoắn ốc mảnh bên trong đám mây
+          puffs += `<path d="M${f(px - r * 0.45 * dir)} ${f(py)} A${f(r * 0.45)} ${f(r * 0.45)} 0 1 1 ${f(px + r * 0.3 * dir)} ${f(py + r * 0.2)}" fill="none" stroke="#8c583a" stroke-width="1.2" opacity="0.55" stroke-linecap="round"/>`;
+        }
+        const L = cx - width * 0.58;
+        const R = cx + width * 0.58;
+        const base = `
+          <path d="M${f(L)} ${f(cy)} H${f(R)} Q${f(R + 18 * scale)} ${f(cy - 14 * scale)} ${f(R - 12 * scale)} ${f(cy - 22 * scale)} H${f(L + 12 * scale)} Q${f(L - 18 * scale)} ${f(cy - 14 * scale)} ${f(L)} ${f(cy)} Z" fill="url(#mbCloud)" class="moebius-line" stroke-width="1.6"/>
+          <line x1="${f(L + 22 * scale)}" y1="${f(cy - 7 * scale)}" x2="${f(R - 22 * scale)}" y2="${f(cy - 7 * scale)}" stroke="#8c583a" stroke-width="1.2" opacity="0.5"/>
+        `;
+        return `<g class="float-cloud">${puffs}${base}</g>`;
+      }
+
+      // 3. Vẽ Chim Hạc / Quái Điểu Ligne Claire (Sải cánh rộng, viền mảnh sắc nét)
+      function moebiusCrane(x, y, scale, delay) {
+        return `<g transform="translate(${x} ${y}) scale(${scale})">
+          <g style="animation-delay:${delay}s">
+            <!-- Cánh trái -->
+            <g class="wing-L" style="animation-delay:${delay}s">
+              <path d="M-6 0 C-48 -42 -115 -58 -175 -34 C-135 -12 -85 8 -14 10 Z" fill="#fcf8f0" class="moebius-line" stroke-width="1.8"/>
+              <path d="M-135 -42 L-175 -34 L-148 -20 Z" fill="#2a211d"/>
+              <path d="M-50 -22 L-110 -28 M-40 -10 L-95 -12" stroke="#2a211d" stroke-width="1.1"/>
+            </g>
+            <!-- Cánh phải -->
+            <g class="wing-R" style="animation-delay:${delay}s">
+              <path d="M6 0 C48 -42 115 -58 175 -34 C135 -12 85 8 14 10 Z" fill="#fcf8f0" class="moebius-line" stroke-width="1.8"/>
+              <path d="M135 -42 L175 -34 L148 -20 Z" fill="#2a211d"/>
+              <path d="M50 -22 L110 -28 M40 -10 L95 -12" stroke="#2a211d" stroke-width="1.1"/>
+            </g>
+            <!-- Thân & Đuôi lụa dài kiểu Makemepulse -->
+            <ellipse cx="0" cy="4" rx="18" ry="9" fill="#fcf8f0" class="moebius-line" stroke-width="1.8"/>
+            <path d="M0 -4 C0 -22 -4 -36 0 -48" stroke="#2a211d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <circle cx="0" cy="-50" r="4.5" fill="#d94b43" stroke="#2a211d" stroke-width="1.2"/>
+            <path d="M0 -54 L0 -70" stroke="#d9a74a" stroke-width="2" stroke-linecap="round"/>
+            <!-- Đuôi chim rẽ quạt -->
+            <path d="M-8 12 Q0 45 -18 78 M8 12 Q0 45 18 78 M0 13 L0 88" stroke="#d96b70" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          </g>
+        </g>`;
+      }
+
+      // 4. Vẽ Lữ Khách đội nón cổ phong trên thuyền độc mộc (Nomadic Traveler)
+      function nomadicBoat(x, y, scale) {
+        return `<g transform="translate(${x} ${y}) scale(${scale})">
+          <g class="boat-bob">
+            <!-- Bóng nước -->
+            <ellipse cx="0" cy="18" rx="95" ry="7" fill="rgba(22,45,38,0.45)"/>
+            <!-- Thân thuyền cong vút hai đầu -->
+            <path d="M-110 -8 Q-70 22 0 20 Q70 22 115 -14 Q82 4 0 4 Q-82 4 -110 -8 Z" fill="#c97a4b" class="moebius-line" stroke-width="2"/>
+            <!-- Đèn lồng treo mũi thuyền -->
+            <path d="M85 -10 Q95 -45 112 -52" fill="none" stroke="#2a211d" stroke-width="1.8"/>
+            <line x1="112" y1="-52" x2="112" y2="-34" stroke="#2a211d" stroke-width="1.2"/>
+            <circle cx="112" cy="-28" r="8" fill="#ffe89e" stroke="#2a211d" stroke-width="1.5"/>
+            <!-- Nhân vật Lữ Khách mặc áo choàng cổ phong & đội nón -->
+            <path d="M-18 4 L-8 -52 L14 -52 L24 4 Z" fill="#d95b5b" class="moebius-line" stroke-width="1.8"/>
+            <path d="M-8 -52 Q-28 -18 -38 6 L-14 4 Z" fill="#e8836b" class="moebius-line" stroke-width="1.6"/>
+            <!-- Nón rộng vành Moebius -->
+            <path d="M-28 -54 L3 -74 L34 -54 Q3 -48 -28 -54 Z" fill="#f4dec0" class="moebius-line" stroke-width="1.8"/>
+            <!-- Cây sào trúc -->
+            <line x1="-26" y1="-68" x2="38" y2="28" stroke="#2a211d" stroke-width="2"/>
+          </g>
+        </g>`;
+      }
+
+      // 5. Vẽ Hoa Sen 2D Bung Nở Tương Tác (Interactive Blooming Lotus)
+      // Khi biến bloom (0 -> 1) tăng lên, cuống sen vươn cao và các cánh sen xòe rộng ra!
+      const lotusInstances = [];
+      function createBloomingLotusSVG(id, x, baseY, maxStem, scale, phase) {
+        lotusInstances.push({ id, x, baseY, maxStem, scale, phase });
+        return `<g id="${id}" transform="translate(${x} ${baseY}) scale(${scale})"></g>`;
+      }
+
+      function renderLotusState(item, bloomVal, time) {
+        const el = document.getElementById(item.id);
+        if (!el) return;
+        // Chiều cao thân sen mọc lên theo độ bloom
+        const grow = 0.35 + 0.65 * bloomVal;
+        const stemH = item.maxStem * grow;
+        const swayX = Math.sin(time * 1.6 + item.phase) * (6 + bloomVal * 6);
+
+        // Góc mở của các cánh sen (từ búp khép kín -> nở bung rực rỡ)
+        const spread = 12 + bloomVal * 46;
+        const innerSpread = 6 + bloomVal * 26;
+        const petalScale = 0.65 + 0.45 * bloomVal;
+
+        const petalPath = 'M0 0 C-22 -18 -26 -62 0 -92 C26 -62 22 -18 0 0 Z';
+
+        let petalsSVG = '';
+        // Lớp cánh ngoài
+        [-1.35, -0.75, 0.75, 1.35].forEach((factor) => {
+          const ang = factor * spread;
+          petalsSVG += `<path d="${petalPath}" transform="rotate(${f(ang)}) scale(${f(petalScale)})" fill="url(#mbPetal)" class="moebius-line" stroke-width="1.6"/>`;
+        });
+        // Lớp cánh trong
+        [-0.85, 0, 0.85].forEach((factor) => {
+          const ang = factor * innerSpread;
+          petalsSVG += `<path d="${petalPath}" transform="rotate(${f(ang)}) scale(${f(petalScale * 0.92)})" fill="url(#mbPetal)" class="moebius-line" stroke-width="1.6"/>`;
+          // Đường gân giữa cánh sen
+          petalsSVG += `<line x1="0" y1="-8" x2="0" y2="${f(-76 * petalScale)}" transform="rotate(${f(ang)})" stroke="rgba(120,30,50,0.45)" stroke-width="1.1"/>`;
+        });
+
+        // Hạt sáng tâm sen khi nở rộ
+        const coreGlow = bloomVal > 0.3
+          ? `<circle cx="0" cy="${f(-42 * petalScale)}" r="${f(14 * bloomVal)}" fill="rgba(255,235,150,${f(bloomVal * 0.65)})"/>`
+          : '';
+
+        el.innerHTML = `
+          <!-- Lá sen nổi trên mặt nước -->
+          <ellipse cx="0" cy="0" rx="68" ry="16" fill="url(#mbLeaf)" class="moebius-line" stroke-width="1.6"/>
+          <path d="M-55 0 L55 0 M-32 -8 L0 0 L32 -8 M-28 8 L0 0 L28 8" stroke="#a9cfa0" stroke-width="1.1" fill="none"/>
+          <!-- Thân cuống sen uốn mềm -->
+          <path d="M0 0 Q${f(swayX * 0.5)} ${f(-stemH * 0.5)} ${f(swayX)} ${f(-stemH)}" stroke="#355e43" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <!-- Đầu bông sen bung cánh -->
+          <g transform="translate(${f(swayX)} ${f(-stemH)}) rotate(${f(swayX * 0.6)})">
+            ${coreGlow}
+            ${petalsSVG}
+          </g>
+        `;
+      }
+
+      /* =========================================================================
+       * DỰNG 6 TẦNG KHÔNG GIAN (L5 -> L0)
+       * ========================================================================= */
+
+      // L5: Bầu trời Moebius, Mặt Trời Trống Đồng Thiên Văn xoay chậm, dãy núi xa
+      (function buildL5() {
+        let sunRays = '';
+        for (let i = 0; i < 24; i++) {
+          const a = (i / 24) * 360;
+          sunRays += `<line x1="0" y1="-165" x2="0" y2="${i % 2 === 0 ? -245 : -205}" transform="rotate(${a})" stroke="#d98a4e" stroke-width="1.5" stroke-dasharray="4 6"/>`;
+        }
+
+        document.getElementById('L5').innerHTML = `<svg ${VB}>
+          <rect x="-200" y="-200" width="2000" height="1400" fill="url(#mbSky)"/>
+
+          <!-- Vòng quỹ đạo Thiên Văn học phong cách 2019.makemepulse.com -->
+          <g transform="translate(800 360)">
+            <circle cx="0" cy="0" r="340" class="gold-orbit" stroke-width="1.4"/>
+            <circle cx="0" cy="0" r="275" stroke="#2c221e" stroke-width="1" fill="none" opacity="0.35"/>
+            <g class="spin-rev">${sunRays}</g>
+            <!-- Đĩa Mặt Trời Vàng Cam viền mực -->
+            <circle cx="0" cy="0" r="150" fill="url(#mbSun)" class="moebius-line" stroke-width="2"/>
+            <!-- Hoa văn Trống Đồng xoay tròn tại chỗ bên trong Mặt Trời -->
+            <g class="spin-slow">
+              <image href="trongdong.png" x="-146" y="-146" width="292" height="292" preserveAspectRatio="none" opacity="0.88"/>
+            </g>
+          </g>
+
+          <!-- Mây xa -->
+          ${moebiusCloud(420, 410, 320, 0.75, false)}
+          ${moebiusCloud(1180, 380, 290, 0.7, true)}
+
+          <!-- Quần thể núi đá vôi Moebius tầng xa -->
+          ${moebiusMountain(280, 660, 260, 280, 'url(#rockLit)', 'url(#rockShade)', false)}
+          ${moebiusMountain(520, 660, 220, 340, 'url(#rockLit)', 'url(#rockShade)', true)}
+          ${moebiusMountain(1080, 660, 240, 320, 'url(#rockLit)', 'url(#rockShade)', true)}
+          ${moebiusMountain(1320, 660, 280, 260, 'url(#rockLit)', 'url(#rockShade)', false)}
+
+          <!-- Mặt hồ ngọc bích -->
+          <rect x="-200" y="655" width="2000" height="550" fill="url(#mbWater)" class="moebius-line" stroke-width="1.8"/>
+          <!-- Đường gợn sóng mảnh đặc trưng Ligne Claire -->
+          <path d="M250 710 H520 M680 695 H960 M1080 720 H1340 M420 755 H880 M590 795 H1050" stroke="#d8eadc" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+        </svg>`;
+      })();
+
+      // L4: Hẻm núi đá vôi trung cảnh + Lữ khách chèo thuyền độc mộc
+      document.getElementById('L4').innerHTML = `<svg ${VB}>
+        ${moebiusMountain(150, 740, 340, 460, 'url(#nearLit)', 'url(#nearShade)', true)}
+        ${moebiusMountain(390, 740, 240, 310, 'url(#nearLit)', 'url(#nearShade)', false)}
+        ${moebiusMountain(1210, 740, 250, 330, 'url(#nearLit)', 'url(#nearShade)', false)}
+        ${moebiusMountain(1450, 740, 350, 480, 'url(#nearLit)', 'url(#nearShade)', true)}
+        ${nomadicBoat(800, 735, 0.95)}
+      </svg>`;
+
+      // L3: Thung lũng Đầm Sen Tương Tác (Nở rộ khi cuộn hoặc nhấn giữ chuột)
+      document.getElementById('L3').innerHTML = `<svg ${VB}>
+        ${createBloomingLotusSVG('lotus-1', 260, 880, 145, 1.15, 0.2)}
+        ${createBloomingLotusSVG('lotus-2', 470, 920, 125, 0.95, 1.4)}
+        ${createBloomingLotusSVG('lotus-3', 660, 865, 110, 0.82, 2.5)}
+        ${createBloomingLotusSVG('lotus-4', 940, 865, 115, 0.85, 3.6)}
+        ${createBloomingLotusSVG('lotus-5', 1130, 920, 130, 0.98, 4.8)}
+        ${createBloomingLotusSVG('lotus-6', 1340, 880, 150, 1.18, 5.9)}
+        ${createBloomingLotusSVG('lotus-center', 800, 945, 175, 1.32, 1.0)}
+      </svg>`;
+
+      // L2L & L2R: Rèm mây cổ phong tách sang hai bên khi cuộn chuột
+      document.getElementById('L2L').innerHTML = `<svg ${VB}>
+        ${moebiusCloud(240, 380, 480, 1.25, false)}
+        ${moebiusCloud(180, 640, 540, 1.35, false)}
+        ${moebiusCloud(280, 880, 520, 1.3, false)}
+      </svg>`;
+
+      document.getElementById('L2R').innerHTML = `<svg ${VB}>
+        ${moebiusCloud(1360, 370, 480, 1.25, true)}
+        ${moebiusCloud(1420, 640, 540, 1.35, true)}
+        ${moebiusCloud(1320, 880, 520, 1.3, true)}
+      </svg>`;
+
+      // L1: Đàn Hạc Thần Ligne Claire vỗ cánh bay xuyên thung lũng
+      document.getElementById('L1').innerHTML = `<svg ${VB}>
+        ${moebiusCrane(1080, 310, 1.05, 0)}
+        ${moebiusCrane(510, 480, 0.82, -0.6)}
+        ${moebiusCrane(680, 240, 0.55, -1.1)}
+        ${moebiusCrane(920, 210, 0.45, -0.3)}
+      </svg>`;
+
+      // L0: Cổng Trăng Moebius kết hợp viền đá cổ & hoa văn vàng kim
+      (function buildL0() {
+        const OUTER = 'M-400 -400 H2000 V1400 H-400 Z';
+        const GATE = 'M420 500 A380 380 0 1 0 1180 500 A380 380 0 1 0 420 500 Z';
+        let gateTicks = '';
+        for (let i = 0; i < 72; i++) {
+          const a = (i / 72) * 360;
+          gateTicks += `<line x1="0" y1="-392" x2="0" y2="${i % 6 === 0 ? -412 : -400}" transform="rotate(${a})" stroke="#d9a74a" stroke-width="${i % 6 === 0 ? 2.2 : 1.1}"/>`;
+        }
+        document.getElementById('L0').innerHTML = `<svg ${VB}>
+          <path d="${OUTER} ${GATE}" fill="#1b302b" fill-rule="evenodd" class="moebius-line" stroke-width="2.5"/>
+          <g transform="translate(800 500)">
+            <circle cx="0" cy="0" r="380" fill="none" stroke="#d9a74a" stroke-width="4"/>
+            <circle cx="0" cy="0" r="418" fill="none" stroke="rgba(217,167,74,0.45)" stroke-width="1.5"/>
+            <g class="spin-slow">${gateTicks}</g>
+          </g>
+          ${moebiusCloud(260, 890, 440, 1.1, false)}
+          ${moebiusCloud(1340, 890, 440, 1.1, true)}
+        </svg>`;
+      })();
+
+      /* =========================================================================
+       * HỆ THỐNG TƯƠNG TÁC: CUỘN Z-AXIS + MOUSE PARALLAX + HOLD TO BLOOM
+       * ========================================================================= */
+      const layers = [...document.querySelectorAll('.layer')].map((el) => ({
+        el,
+        d: +el.dataset.d,
+        part: +(el.dataset.part || 0),
+        px: +(el.dataset.px || 0.04)
+      }));
+
+      const clamp01 = (x) => Math.max(0, Math.min(1, x));
+      const smooth = (a, b, x) => {
+        const t = clamp01((x - a) / (b - a));
+        return t * t * (3 - 2 * t);
+      };
+
+      let scrollP = 0;
+      let isHolding = false;
+      let holdBloom = 0;
+      const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+
+      window.addEventListener('scroll', () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        scrollP = max > 0 ? clamp01(window.scrollY / max) : 0;
+      }, { passive: true });
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouse.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // Nhấn giữ chuột hoặc phím Space để đánh thức thảm hoa sen nở rộ (như 2019.makemepulse.com)
+      function startHold() {
+        isHolding = true;
+        document.body.classList.add('is-blooming');
+        if (soundOn) triggerBloomChord();
+      }
+      function endHold() {
+        isHolding = false;
+        document.body.classList.remove('is-blooming');
+      }
+
+      window.addEventListener('mousedown', startHold);
+      window.addEventListener('mouseup', endHold);
+      window.addEventListener('touchstart', startHold, { passive: true });
+      window.addEventListener('touchend', endHold);
+      window.addEventListener('keydown', (e) => { if (e.code === 'Space') startHold(); });
+      window.addEventListener('keyup', (e) => { if (e.code === 'Space') endHold(); });
+
+      /* ---------- Hạt sáng năng lượng bay lên khi Hoa Nở ---------- */
+      const pCanvas = document.getElementById('particle-canvas');
+      const pCtx = pCanvas.getContext('2d');
+      const particles = Array.from({ length: 65 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: 1.5 + Math.random() * 3,
+        vy: -(0.4 + Math.random() * 1.4),
+        vx: (Math.random() - 0.5) * 0.6,
+        alpha: 0.2 + Math.random() * 0.7
+      }));
+
+      function resizeCanvas() {
+        pCanvas.width = window.innerWidth;
+        pCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      /* ---------- Âm thanh Đàn Tranh Ngũ Cung ---------- */
+      let ac = null, master = null, soundOn = false, melodyTimer = null;
+      const PENTA = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 784.0];
+
+      function initAudio() {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        master = ac.createGain();
+        master.gain.value = 0.8;
+        master.connect(ac.destination);
+      }
+
+      function pluckNote(freq, delaySec, vol) {
+        if (!ac || !soundOn) return;
+        const t = ac.currentTime + delaySec;
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq * 1.02, t);
+        osc.frequency.exponentialRampToValueAtTime(freq, t + 0.08);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(t);
+        osc.stop(t + 2.3);
+      }
+
+      function triggerBloomChord() {
+        [0, 2, 4, 5, 7, 8].forEach((idx, i) => {
+          pluckNote(PENTA[idx], i * 0.09, 0.12);
+        });
+      }
+
+      function loopMelody() {
+        if (!soundOn) return;
+        const note = PENTA[Math.floor(Math.random() * PENTA.length)];
+        pluckNote(note, 0, 0.1);
+        melodyTimer = setTimeout(loopMelody, 520 + Math.random() * 680);
+      }
+
+      const soundBtn = document.getElementById('soundBtn');
+      soundBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!ac) initAudio();
+        if (ac.state === 'suspended') ac.resume();
+        soundOn = !soundOn;
+        soundBtn.setAttribute('aria-pressed', String(soundOn));
+        soundBtn.textContent = soundOn ? 'Tắt đàn Ngũ Cung' : 'Bật đàn Ngũ Cung';
+        clearTimeout(melodyTimer);
+        if (soundOn) {
+          triggerBloomChord();
+          loopMelody();
+        }
+      });
+
+      /* ---------- Vòng lặp Animation 60fps ---------- */
+      const TRAVEL = 2.65;
+      let startTime = performance.now();
+
+      function tick(now) {
+        const elapsed = (now - startTime) * 0.001;
+
+        // Làm mượt tọa độ chuột Parallax
+        mouse.x += (mouse.tx - mouse.x) * 0.07;
+        mouse.y += (mouse.ty - mouse.y) * 0.07;
+
+        // Tính độ nở hoa sen (kết hợp giữa cuộn chuột xuống đầm sen và nhấn giữ chuột)
+        const targetHold = isHolding ? 1 : 0;
+        holdBloom += (targetHold - holdBloom) * 0.06;
+        const scrollBloom = smooth(0.32, 0.88, scrollP);
+        const totalBloom = clamp01(Math.max(scrollBloom, holdBloom));
+
+        // Cập nhật hình dáng nở của tất cả các bông sen 2D
+        for (const item of lotusInstances) {
+          renderLotusState(item, totalBloom, elapsed);
+        }
+
+        // Cập nhật chiều sâu Z-axis & Mouse Parallax cho 6 lớp
+        const cz = scrollP * TRAVEL;
+        for (const L of layers) {
+          const dist = L.d - cz;
+          if (dist <= 0.22) {
+            L.el.style.visibility = 'hidden';
+            continue;
+          }
+          const alpha = L.d >= 7 ? 1 : clamp01((dist - 0.28) / 0.35);
+          L.el.style.visibility = alpha > 0 ? 'visible' : 'hidden';
+          L.el.style.opacity = alpha;
+
+          const partX = L.part ? L.part * smooth(0.02, 0.42, scrollP) * 56 : 0;
+          const paraX = -mouse.x * L.px * 100;
+          const paraY = -mouse.y * L.px * 60;
+          const scale = (L.d / dist) * (1 + holdBloom * 0.035);
+
+          L.el.style.transform = `translate3d(${(partX + paraX).toFixed(2)}%, ${paraY.toFixed(2)}%, 0) scale(${scale.toFixed(4)})`;
+        }
+
+        // Vẽ hạt phấn vàng bay lên
+        pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+        const speedBoost = 1 + totalBloom * 3.2;
+        for (const pt of particles) {
+          pt.y += pt.vy * speedBoost;
+          pt.x += pt.vx + Math.sin(elapsed + pt.y * 0.01) * 0.3;
+          if (pt.y < -10) {
+            pt.y = pCanvas.height + 10;
+            pt.x = Math.random() * pCanvas.width;
+          }
+          pCtx.beginPath();
+          pCtx.arc(pt.x, pt.y, pt.r * (0.8 + totalBloom * 0.6), 0, Math.PI * 2);
+          pCtx.fillStyle = `rgba(255, 232, 160, ${pt.alpha * (0.35 + totalBloom * 0.65)})`;
+          pCtx.fill();
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
+
