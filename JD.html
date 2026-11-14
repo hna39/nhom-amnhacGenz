@@ -2520,9 +2520,17 @@
     .p-home-work__item-figure canvas.ve-draw { display: block; width: 100%; max-width: 960rem; height: auto; }
     @media (width<=767px) { .p-home-work__line { height: 200rem !important; } }
 </style>
+<style id="gt-logo-pin">
+    /* Logo ghim góc trên bên trái */
+    .gt-logo { position: fixed; top: clamp(12px, 1.6vw, 24px); left: clamp(14px, 2vw, 32px); z-index: 1000; display: block; line-height: 0; }
+    .gt-logo img { height: clamp(44px, 4.6vw, 66px); width: auto; display: block; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .35)); transition: transform .3s ease; }
+    .gt-logo:hover img { transform: scale(1.05); }
+</style>
 </head>
 
-<body class="l-body preload"><!-- Google Tag Manager (noscript) --><noscript><iframe
+<body class="l-body preload">
+<a href="#mv" class="gt-logo" aria-label="Về đầu trang" data-barba-prevent><img src="/brand/logo.png" alt="Giao Thoa Âm Sắc" width="496" height="367" decoding="async"></a>
+<!-- Google Tag Manager (noscript) --><noscript><iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-MG9S6D26" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript><!-- End Google Tag Manager (noscript) -->
     <header class="l-header" data-color="white" data-visible="false" data-menu="closed">
