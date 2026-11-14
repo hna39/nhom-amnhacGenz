@@ -2502,6 +2502,16 @@
     .p-home-document__contents .image, .p-home-document__contents .item-link:hover .image { clip-path: none !important; transition: none !important; }
     .p-home-document__contents .image { background: none !important; }
     .p-home-document__contents .image img { object-fit: contain !important; }
+    /* Hạng vé: 3 vé xếp một hàng, ảnh ở trên, chữ ở dưới */
+    .p-home-document__head { grid-column: 1 / -1 !important; text-align: center !important; }
+    .p-home-document__contents { grid-column: 1 / -1 !important; }
+    .p-home-document__contents .items { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 48rem !important; flex-direction: initial !important; }
+    .p-home-document__contents .item-link { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 24rem !important; }
+    .p-home-document__contents .image { width: 100% !important; height: auto !important; aspect-ratio: 900 / 502; }
+    .p-home-document__contents .image img { width: 100% !important; height: 100% !important; }
+    .p-home-document__contents .texts { width: auto !important; max-width: none !important; }
+    .p-home-document__contents .p-home-document__contents-link { display: flex !important; justify-content: center !important; }
+    @media (width <= 767px) { .p-home-document__contents .items { grid-template-columns: 1fr !important; } }
     /* Ảnh khán phòng ở mục Nghệ Sĩ & Sản Xuất: phủ tối để tiêu đề nổi bật */
     .p-home-collective__hero-background-inner { position: relative; }
     .p-home-collective__hero-background-inner::after { content: ""; position: absolute; inset: 0; pointer-events: none;

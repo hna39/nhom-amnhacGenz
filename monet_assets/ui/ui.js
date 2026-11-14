@@ -20,7 +20,7 @@
         <div class="mui-sky" aria-hidden="true"></div>
         <div class="mui-g mui-g--under"></div>
         <div class="mui-g mui-g--mid" id="muiGMid"></div>
-        <div class="mui-gtitle mui-lock" id="muiGTitle"><span class="mui-lock__k"><i>ĐÊM NHẠC DÂN GIAN</i><i>25.11.2026 \u2014 20:00</i></span><b class="mui-lock__n" style="font-size:clamp(38px,7.2vw,108px);letter-spacing:.02em">GIAO <em>THOA</em></b><span class="mui-lock__y">Âm Sắc</span><span class="mui-lock__s">Nhà Hát Lớn Hà Nội</span></div>
+        <div class="mui-gtitle mui-lock" id="muiGTitle"><span class="mui-lock__k"><i>ĐÊM NHẠC DÂN GIAN</i><i>25.11.2026 \u2014 20:00</i></span><b class="mui-lock__n" style="font-size:clamp(38px,7.2vw,108px);letter-spacing:.02em;white-space:nowrap">GIAO <em>THOA</em> ÂM SẮC</b><span class="mui-lock__s">Nhà Hát Lớn Hà Nội</span></div>
         <div class="mui-g mui-g--bridge" id="muiGBridge"></div>
         <div class="mui-g-dapple" aria-hidden="true"></div>
         <canvas class="mui-petals" id="muiPetals" aria-hidden="true"></canvas>
