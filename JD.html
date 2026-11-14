@@ -2521,10 +2521,16 @@
     @media (width<=767px) { .p-home-work__line { height: 200rem !important; } }
 </style>
 <style id="gt-logo-pin">
-    /* Logo ghim góc trên bên trái */
-    .gt-logo { position: fixed; top: clamp(12px, 1.6vw, 24px); left: 50%; transform: translateX(-50%); z-index: 1000; display: block; line-height: 0; }
-    .gt-logo { pointer-events: none; }
-    .gt-logo img { height: clamp(44px, 4.6vw, 66px); width: auto; display: block; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .35)); }
+    /* Logo ghim góc trên bên phải, căn giữa theo chiều dọc với hàng menu bên trái
+       (menu: lề trên 24rem, chữ 13rem x line-height 1.2 -> tâm ở 24rem + 7.8rem) */
+    .gt-logo { --gt-h: clamp(40px, 3.4vw, 54px);
+        position: fixed; z-index: 1000; display: block; line-height: 0; pointer-events: none;
+        right: var(--grid-padding, 24px); top: max(4px, calc(24rem + 7.8rem - var(--gt-h) / 2)); }
+    .gt-logo img { height: var(--gt-h); width: auto; display: block; filter: drop-shadow(0 2px 8px rgb(0 0 0 / .35)); }
+    @media (width<=767px) {
+        /* điện thoại: menu dùng lề trên 16rem, chữ 11rem */
+        .gt-logo { --gt-h: 36px; top: max(4px, calc(16rem + 6.6rem - var(--gt-h) / 2)); }
+    }
 </style>
 </head>
 
